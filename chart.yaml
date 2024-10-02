@@ -1,0 +1,5 @@
+apiVersion: v2
+name: llm-benchmark
+description: A Helm chart for deploying LLM Benchmark Simulation API and Celery workers
+version: 0.1.0
+appVersion: "1.0.0"

@@ -1,0 +1,73 @@
+services:
+  db:
+    restart: "on-failure"
+    image: postgres:16-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - ./.env
+
+  redis:
+    restart: "on-failure"
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+
+  api: &api_service
+    build:
+      context: ./app
+      dockerfile: api.Dockerfile
+    image: llm-benchmark-api
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - ./app:/app
+    ports:
+      - '8000:8000'
+    env_file:
+      - ./.env
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+
+  celery-worker:
+    <<: *api_service
+    command: celery --app=tasks.celery_tasks worker -l info --logfile=logs/celery_worker.log -E
+    depends_on:
+      - db
+      - redis
+
+  celery-beat:
+    <<: *api_service
+    command: celery --app=tasks.celery_tasks beat -l info --logfile=logs/celery_beat.log
+    depends_on:
+      - db
+      - redis
+      - celery-worker
+
+  flower-dashboard:
+    <<: *api_service
+    command: celery --broker=redis://redis:6379 flower --port=5555
+    ports:
+      - '5555:5555'
+    depends_on:
+      - db
+      - redis
+      - celery-worker
+
+  llm-dashboard:
+    build:
+      context: ./frontend
+      dockerfile: frontend.Dockerfile
+    container_name: llm-benchmark-dashboard
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redisdata:
+  grafana_data:

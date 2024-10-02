@@ -1,0 +1,17 @@
+venv/
+.history/
+.history
+history*
+__pycache__/
+.idea/
+.vscode/
+setup.cfg
+.DS_Store
+celerybeat.pid
+.pytest_cache
+*.sqlite3
+.coverage
+htmlcov
+/logs/
+**/logs/**
+celerybeat-schedule

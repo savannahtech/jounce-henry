@@ -1,0 +1,20 @@
+replicaCount: 2
+
+image:
+  repository: your-docker-repo/llm-benchmark
+  tag: latest
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+    - host: your-api-domain.com
+      paths:
+        - /
+
+resources: {}
